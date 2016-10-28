@@ -5,12 +5,13 @@ import static org.junit.Assert.*;
 import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
+import it.xpug.kata.birthday_greetings.adapter.FileEmployeeRepository;
+import it.xpug.kata.birthday_greetings.adapter.SmtpMessageSender;
+import it.xpug.kata.birthday_greetings.domain.BirthdayService;
+import it.xpug.kata.birthday_greetings.domain.XDate;
 import org.junit.*;
 
-import com.dumbster.smtp.*;
-
 import javax.mail.Address;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 public class AcceptanceTest {
@@ -22,14 +23,15 @@ public class AcceptanceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		birthdayService = new BirthdayService();
+		birthdayService = new BirthdayService(new FileEmployeeRepository("employee_data.txt"),
+			new SmtpMessageSender("localhost", NONSTANDARD_PORT, "sender@here.com"));
 	}
 
 
 	@Test
 	public void willSendGreetings_whenItsSomebodysBirthday() throws Exception {
 
-		birthdayService.sendGreetings("employee_data.txt", new XDate("2008/10/08"), "localhost", NONSTANDARD_PORT);
+		birthdayService.sendGreetings(new XDate("2008/10/08"));
 
 		MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
 		assertEquals("message not sent?", 1, receivedMessages.length);
@@ -43,7 +45,7 @@ public class AcceptanceTest {
 
 	@Test
 	public void willNotSendEmailsWhenNobodysBirthday() throws Exception {
-		birthdayService.sendGreetings("employee_data.txt", new XDate("2008/01/01"), "localhost", NONSTANDARD_PORT);
+		birthdayService.sendGreetings(new XDate("2008/01/01"));
 
 		assertEquals("what? messages?", 0, greenMail.getReceivedMessages().length);
 	}
